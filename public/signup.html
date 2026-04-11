@@ -1,23 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <title>봉이 가계부 - 회원가입</title>
     <meta charset="utf-8">
     <link rel="stylesheet" href="style.css">
-    
     <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-
-    <script>
-        function findAddr() {
-            new daum.Postcode({
-                oncomplete: function(data) {
-                    var addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
-                    document.getElementById("signup-address").value = addr;
-                    document.getElementById("signup-address-detail").focus();
-                }
-            }).open();
-        }
-    </script>
 </head>
 <body>
 
@@ -25,34 +12,55 @@
     <h2>회원가입</h2>
     
     <input type="text" id="signup-nickname" placeholder="닉네임">
+    <div id="msg-nickname" class="error-msg"></div>
+
     <input type="email" id="signup-email" placeholder="이메일 주소">
+    <div id="msg-email" class="error-msg"></div>
     
-    <div style="display: flex; gap: 8px; margin-bottom: 0px;">
-        <input type="text" id="signup-address" placeholder="주소 검색" readonly style="flex: 3; margin: 8px 0;">
-        <button type="button" onclick="findAddr()" class="sub-btn" style="flex: 1; margin: 8px 0;">검색</button>
+    <div class="address-row">
+        <input type="text" id="signup-address" placeholder="주소 검색" readonly>
+        <button type="button" onclick="findAddr()" class="sub-btn">검색</button>
     </div>
-    <input type="text" id="signup-address-detail" placeholder="상세 주소를 입력하세요">
+    <input type="text" id="signup-address-detail" placeholder="상세 주소" style="margin-top:4px;">
+    <div id="msg-address" class="error-msg"></div>
+
+    <input type="tel" id="signup-phone" placeholder="휴대폰 번호" maxlength="13">
+    <div id="msg-phone" class="error-msg"></div>
     
-    <input type="tel" id="signup-phone" placeholder="휴대폰 번호 (- 제외)">
-    
-    <input type="password" id="signup-password" placeholder="비밀번호 (6자리 이상)">
+    <input type="password" id="signup-password" placeholder="비밀번호 (6자 이상)">
+    <div id="msg-password" class="error-msg"></div>
+
     <input type="password" id="signup-password-confirm" placeholder="비밀번호 확인">
-    
-    <div id="password-message" style="font-size: 12px; text-align: left; margin-left: 5px; margin-bottom: 15px; min-height: 15px; font-weight: bold;"></div>
+    <div id="msg-password-confirm" class="error-msg"></div>
 
     <button class="login-btn" id="signup-btn">가입 및 인증메일 발송</button>
 
     <p class="signup-prompt">
-        이미 계정이 있으신가요? 
-        <span class="signup-link" onclick="location.href='index.html'">로그인</span>
+        이미 계정이 있으신가요? <span class="signup-link" onclick="location.href='index.html'">로그인</span>
     </p>
 </div>
+
+<script>
+    function findAddr() {
+        new daum.Postcode({
+            oncomplete: function(data) {
+                var addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
+                document.getElementById("signup-address").value = addr;
+                const detailInput = document.getElementById("signup-address-detail");
+                detailInput.focus();
+                
+                const msgAddress = document.getElementById("msg-address");
+                msgAddress.innerText = "";
+                msgAddress.classList.remove('active');
+            }
+        }).open();
+    }
+</script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // 봉이의 진짜 firebaseConfig (꼭 확인!)
     const firebaseConfig = {
         apiKey: "AIzaSyDj7sSt6RIAXkUnZ_TLbIhDZUVkgqhJOH0",
         authDomain: "bong-account.firebaseapp.com",
@@ -65,51 +73,96 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // 비밀번호 체크 로직
-    const pwInput = document.getElementById('signup-password');
-    const pwConfirmInput = document.getElementById('signup-password-confirm');
-    const message = document.getElementById('password-message');
+    const inputs = {
+        nickname: { el: document.getElementById('signup-nickname'), msg: document.getElementById('msg-nickname'), text: "닉네임을 입력해주세요." },
+        email: { el: document.getElementById('signup-email'), msg: document.getElementById('msg-email'), text: "이메일을 입력해주세요." },
+        address: { el: document.getElementById('signup-address-detail'), msg: document.getElementById('msg-address'), text: "주소를 완성해주세요." },
+        phone: { el: document.getElementById('signup-phone'), msg: document.getElementById('msg-phone'), text: "번호를 입력해주세요." },
+        pw: { el: document.getElementById('signup-password'), msg: document.getElementById('msg-password'), text: "6자 이상 입력해주세요." },
+        pwc: { el: document.getElementById('signup-password-confirm'), msg: document.getElementById('msg-password-confirm'), text: "비밀번호가 다릅니다." }
+    };
 
-    function checkPassword() {
-        if (pwConfirmInput.value === "") {
-            message.innerText = "";
-            return;
-        }
-        if (pwInput.value === pwConfirmInput.value) {
-            message.innerText = "✓ 비밀번호가 일치합니다.";
-            message.style.color = "green";
+    function toggleError(item, show, customText) {
+        if (show) {
+            item.msg.innerText = customText || item.text;
+            item.msg.classList.add('active');
         } else {
-            message.innerText = "✕ 비밀번호가 일치하지 않습니다.";
-            message.style.color = "red";
+            item.msg.innerText = "";
+            item.msg.classList.remove('active');
         }
     }
 
-    pwInput.addEventListener('input', checkPassword);
-    pwConfirmInput.addEventListener('input', checkPassword);
+    // [수정] 이메일 실시간 형식 체크 포함 Blur 이벤트
+    Object.keys(inputs).forEach(key => {
+        const item = inputs[key];
+        item.el.addEventListener('blur', () => {
+            if (key === 'email') {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!item.el.value) toggleError(item, true, "이메일을 입력해주세요.");
+                else if (!emailPattern.test(item.el.value)) toggleError(item, true, "제대로 된 이메일 형식이 아닙니다.");
+                else toggleError(item, false);
+            } else {
+                if (!item.el.value) toggleError(item, true);
+                else toggleError(item, false);
+            }
+        });
+    });
 
-    // 회원가입 버튼 클릭 로직
+    // 휴대폰 하이픈 자동입력
+    inputs.phone.el.addEventListener('input', (e) => {
+        let val = e.target.value.replace(/[^0-9]/g, '');
+        let res = "";
+        if (val.length < 4) res = val;
+        else if (val.length < 7) res = val.substr(0, 3) + "-" + val.substr(3);
+        else if (val.length < 11) res = val.substr(0, 3) + "-" + val.substr(3, 3) + "-" + val.substr(6);
+        else res = val.substr(0, 3) + "-" + val.substr(3, 4) + "-" + val.substr(7);
+        e.target.value = res;
+    });
+
+    // 비밀번호 일치 실시간 체크
+    inputs.pwc.el.addEventListener('input', () => {
+        if (inputs.pw.el.value === inputs.pwc.el.value) {
+            inputs.pwc.msg.style.color = "green";
+            toggleError(inputs.pwc, true, "✓ 일치합니다.");
+        } else {
+            inputs.pwc.msg.style.color = "#ff4d4d";
+            toggleError(inputs.pwc, true, "✕ 일치하지 않습니다.");
+        }
+    });
+
+    // 회원가입 버튼 클릭
     document.getElementById('signup-btn').addEventListener('click', () => {
-        const email = document.getElementById('signup-email').value;
-        const password = pwInput.value;
+        const email = inputs.email.el.value;
+        const password = inputs.pw.el.value;
 
-        if (password === "" || password !== pwConfirmInput.value) {
-            alert("비밀번호를 다시 확인해주세요!");
+        if (!inputs.nickname.el.value || !email || !password || inputs.pw.el.value !== inputs.pwc.el.value) {
+            alert("입력 정보를 다시 확인해주세요.");
             return;
         }
 
         createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                sendEmailVerification(auth.currentUser)
-                    .then(() => {
-                        alert("가입 성공! 인증 메일을 확인해주세요.");
-                        location.href = "index.html";
-                    });
+                sendEmailVerification(auth.currentUser).then(() => {
+                    alert("가입 성공! 메일함을 확인해주세요.");
+                    location.href = "index.html";
+                });
             })
             .catch((error) => {
-                alert("에러 발생: " + error.message);
+                // [수정] catch 로직 하나로 깔끔하게 정리
+                if (error.code === 'auth/invalid-email') {
+                    toggleError(inputs.email, true, "올바른 이메일 형식을 입력해주세요.");
+                    inputs.email.el.focus();
+                } else if (error.code === 'auth/email-already-in-use') {
+                    toggleError(inputs.email, true, "이미 사용 중인 이메일입니다.");
+                    inputs.email.el.focus();
+                } else if (error.code === 'auth/weak-password') {
+                    toggleError(inputs.pw, true, "비밀번호가 너무 취약합니다. (6자 이상)");
+                    inputs.pw.el.focus();
+                } else {
+                    alert("오류가 발생했습니다: " + error.message);
+                }
             });
     });
 </script>
-
 </body>
 </html>

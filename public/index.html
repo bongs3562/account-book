@@ -3,7 +3,7 @@
 <head>
     <title>봉이 가계부 - 로그인</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,10 +12,11 @@
     <h2><span style="color: #6c5ce7;">봉이</span> 가계부</h2>
     
     <input type="email" id="email" placeholder="이메일">
-    <input type="password" id="password" placeholder="비밀번호">
-    
-    <div id="login-error-message" style="font-size: 13px; color: #ff4d4d; text-align: center; margin-top: 10px; min-height: 18px; font-weight: bold;"></div>
+    <div id="msg-email" class="error-msg"></div>
 
+    <input type="password" id="password" placeholder="비밀번호">
+    <div id="msg-password" class="error-msg"></div>
+    
     <button class="login-btn" id="login-btn">로그인</button>
 
     <div class="divider">또는</div>
@@ -37,10 +38,11 @@
         getAuth, 
         signInWithEmailAndPassword, 
         GoogleAuthProvider, 
-        signInWithPopup 
+        signInWithPopup, 
+        signOut,
+        onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // 봉이의 파이어베이스 설정값 (이미 입력해뒀어!)
     const firebaseConfig = {
         apiKey: "AIzaSyDj7sSt6RIAXkUnZ_TLbIhDZUVkgqhJOH0",
         authDomain: "bong-account.firebaseapp.com",
@@ -54,43 +56,77 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // 1. 일반 이메일 로그인 로직
-    document.getElementById('login-btn').addEventListener('click', () => {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const errorDiv = document.getElementById('login-error-message');
+    const loginInputs = {
+        email: { el: document.getElementById('email'), msg: document.getElementById('msg-email'), text: "이메일을 입력해주세요." },
+        pw: { el: document.getElementById('password'), msg: document.getElementById('msg-password'), text: "비밀번호를 입력해주세요." }
+    };
 
-        errorDiv.innerText = ""; // 클릭할 때마다 메시지 초기화
+    function toggleError(item, show, customText) {
+        if (show) {
+            item.msg.innerText = customText || item.text;
+            item.msg.classList.add('active');
+        } else {
+            item.msg.innerText = "";
+            item.msg.classList.remove('active');
+        }
+    }
+
+    // 실시간 검증 (Blur)
+    Object.keys(loginInputs).forEach(key => {
+        const item = loginInputs[key];
+        item.el.addEventListener('blur', () => {
+            if (!item.el.value) toggleError(item, true);
+            else toggleError(item, false);
+        });
+    });
+
+    // 1. 일반 로그인
+    document.getElementById('login-btn').addEventListener('click', () => {
+        const email = loginInputs.email.el.value;
+        const password = loginInputs.pw.el.value;
+        if (!email) return toggleError(loginInputs.email, true);
+        if (!password) return toggleError(loginInputs.pw, true);
 
         signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                const user = userCredential.user;
-                if (user.emailVerified) {
-                    location.href = "main.html"; // 인증 완료 시 메인으로 이동
+                if (userCredential.user.emailVerified) {
+                    location.href = "main.html";
                 } else {
-                    errorDiv.innerText = "이메일 인증이 완료되지 않았습니다.";
-                    auth.signOut();
+                    toggleError(loginInputs.email, true, "이메일 인증이 필요합니다.");
+                    signOut(auth);
                 }
             })
-            .catch((error) => {
-                console.error("Firebase Auth Error:", error.code);
-                errorDiv.innerText = "이메일 또는 비밀번호가 틀렸습니다.";
-            });
+            .catch(() => toggleError(loginInputs.pw, true, "이메일 또는 비밀번호가 틀렸습니다."));
     });
 
-    // 2. 구글 로그인 로직
+    // 2. 구글 로그인 (오류 해결 버전)
     document.getElementById('google-login-btn').addEventListener('click', () => {
+        // Redirect 대신 Popup을 사용하되, 모바일 사파리에서도 잘 작동하도록 처리
         signInWithPopup(auth, provider)
             .then((result) => {
-                console.log("구글 로그인 성공!");
-                location.href = "main.html"; // 로그인 성공 시 메인으로 이동
+                console.log("로그인 성공");
+                location.href = "main.html";
             })
             .catch((error) => {
-                console.error("Google Login Error:", error);
-                alert("구글 로그인 실패: " + error.message);
+                console.error("Auth Error:", error.code);
+                if (error.code === 'auth/popup-blocked') {
+                    alert("팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요!");
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                    // 중복 클릭 방지용 (무시 가능)
+                } else {
+                    alert("로그인 중 오류가 발생했습니다: " + error.message);
+                }
             });
     });
-</script>
 
+    // 로그인 상태 자동 체크 (보조 장치)
+    onAuthStateChanged(auth, (user) => {
+        if (user && user.emailVerified) {
+            // 이미 로그인 되어 있다면 바로 메인으로
+            // location.href = "main.html"; 
+        }
+    });
+
+</script>
 </body>
 </html>
