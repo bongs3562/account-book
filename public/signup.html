@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>봉이 가계부 - 회원가입</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+    <script>
+        function findAddr() {
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    var addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
+                    document.getElementById("signup-address").value = addr;
+                    document.getElementById("signup-address-detail").focus();
+                }
+            }).open();
+        }
+    </script>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>회원가입</h2>
+    
+    <input type="text" id="signup-nickname" placeholder="닉네임">
+    <input type="email" id="signup-email" placeholder="이메일 주소">
+    
+    <div style="display: flex; gap: 8px; margin-bottom: 0px;">
+        <input type="text" id="signup-address" placeholder="주소 검색" readonly style="flex: 3; margin: 8px 0;">
+        <button type="button" onclick="findAddr()" class="sub-btn" style="flex: 1; margin: 8px 0;">검색</button>
+    </div>
+    <input type="text" id="signup-address-detail" placeholder="상세 주소를 입력하세요">
+    
+    <input type="tel" id="signup-phone" placeholder="휴대폰 번호 (- 제외)">
+    
+    <input type="password" id="signup-password" placeholder="비밀번호 (6자리 이상)">
+    <input type="password" id="signup-password-confirm" placeholder="비밀번호 확인">
+    
+    <div id="password-message" style="font-size: 12px; text-align: left; margin-left: 5px; margin-bottom: 15px; min-height: 15px; font-weight: bold;"></div>
+
+    <button class="login-btn" id="signup-btn">가입 및 인증메일 발송</button>
+
+    <p class="signup-prompt">
+        이미 계정이 있으신가요? 
+        <span class="signup-link" onclick="location.href='index.html'">로그인</span>
+    </p>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // 봉이의 진짜 firebaseConfig (꼭 확인!)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDj7sSt6RIAXkUnZ_TLbIhDZUVkgqhJOH0",
+        authDomain: "bong-account.firebaseapp.com",
+        projectId: "bong-account",
+        storageBucket: "bong-account.firebasestorage.app",
+        messagingSenderId: "98177629609",
+        appId: "1:98177629609:web:d922af5f8fb6c1465998b8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 비밀번호 체크 로직
+    const pwInput = document.getElementById('signup-password');
+    const pwConfirmInput = document.getElementById('signup-password-confirm');
+    const message = document.getElementById('password-message');
+
+    function checkPassword() {
+        if (pwConfirmInput.value === "") {
+            message.innerText = "";
+            return;
+        }
+        if (pwInput.value === pwConfirmInput.value) {
+            message.innerText = "✓ 비밀번호가 일치합니다.";
+            message.style.color = "green";
+        } else {
+            message.innerText = "✕ 비밀번호가 일치하지 않습니다.";
+            message.style.color = "red";
+        }
+    }
+
+    pwInput.addEventListener('input', checkPassword);
+    pwConfirmInput.addEventListener('input', checkPassword);
+
+    // 회원가입 버튼 클릭 로직
+    document.getElementById('signup-btn').addEventListener('click', () => {
+        const email = document.getElementById('signup-email').value;
+        const password = pwInput.value;
+
+        if (password === "" || password !== pwConfirmInput.value) {
+            alert("비밀번호를 다시 확인해주세요!");
+            return;
+        }
+
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                sendEmailVerification(auth.currentUser)
+                    .then(() => {
+                        alert("가입 성공! 인증 메일을 확인해주세요.");
+                        location.href = "index.html";
+                    });
+            })
+            .catch((error) => {
+                alert("에러 발생: " + error.message);
+            });
+    });
+</script>
+
+</body>
+</html>

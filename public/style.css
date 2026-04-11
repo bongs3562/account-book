@@ -1,0 +1,163 @@
+/* 1. 전체 기본 설정 */
+body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f8f9fa;
+    margin: 0;
+}
+
+/* 2. 로그인/회원가입 공통 컨테이너 */
+.login-container {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    width: 340px; /* 약간 넓혀서 안정감 부여 */
+    text-align: center;
+}
+
+/* 3. 타이틀 스타일 */
+h2 {
+    color: #2d3436;
+    font-size: 1.8em;
+    font-weight: 800;
+    margin-bottom: 30px;
+}
+
+/* 4. 입력창 공통 스타일 */
+input {
+    width: 100%;
+    height: 45px;
+    padding: 0 12px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+input:focus {
+    outline: none;
+    border-color: #6c5ce7;
+}
+
+/* 5. 메인 버튼 (로그인/가입하기) */
+.login-btn {
+    width: 100%;
+    height: 45px;
+    background-color: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 10px;
+    
+    /* 위아래 정렬 완벽 보정 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+}
+
+.login-btn:hover {
+    background-color: #5a4acf;
+}
+
+/* 6. 주소 검색 버튼 (톤 다운 스타일) */
+.sub-btn {
+    height: 45px;
+    background-color: #a29bfe; /* 톤 다운된 보라색 */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    
+    /* 위아래 정렬 완벽 보정 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+    transition: background 0.2s;
+}
+
+.sub-btn:hover {
+    background-color: #837dec;
+}
+
+/* 7. 구분선 (또는) */
+.divider {
+    display: flex;
+    align-items: center;
+    color: #ccc;
+    font-size: 12px;
+    margin: 25px 0;
+}
+
+.divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #eee;
+    margin: 0 10px;
+}
+
+/* 8. 구글 버튼 (심플 모던) */
+.google-btn {
+    width: 100%;
+    height: 45px;
+    background-color: white;
+    color: #555;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    
+    /* 중요: 로고와 글자를 가로로 정렬 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    
+    /* 버튼 밖으로 삐져나가는 거 방지 */
+    overflow: hidden; 
+}
+
+/* ⚠️ 여기가 핵심: 구글 로고 이미지 크기 강제 고정 */
+.google-btn img {
+    width: 18px !important;  /* 아주 작고 소중하게 고정 */
+    height: 18px !important;
+    object-fit: contain;     /* 비율 유지 */
+}
+
+/* 9. 하단 안내 문구 및 링크 */
+.signup-prompt {
+    color: #888;
+    font-size: 15px;
+    margin-top: 30px;
+}
+
+.signup-link {
+    color: #6c5ce7;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 8px;
+    text-decoration: none;
+}
+
+.signup-link:hover {
+    text-decoration: underline;
+}
+
+/* 10. 비밀번호 일치/불일치 메시지 전용 */
+#password-message {
+    font-weight: bold;
+    min-height: 15px;
+}

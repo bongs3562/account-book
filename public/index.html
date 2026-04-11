@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <title>봉이 가계부 - 로그인</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="login-container">
+    <h2><span style="color: #6c5ce7;">봉이</span> 가계부</h2>
+    
+    <input type="email" id="email" placeholder="이메일">
+    <input type="password" id="password" placeholder="비밀번호">
+    
+    <div id="login-error-message" style="font-size: 13px; color: #ff4d4d; text-align: center; margin-top: 10px; min-height: 18px; font-weight: bold;"></div>
+
+    <button class="login-btn" id="login-btn">로그인</button>
+
+    <div class="divider">또는</div>
+
+    <button class="google-btn" id="google-login-btn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        <span>Google로 계속하기</span>
+    </button>
+
+    <p class="signup-prompt">
+        계정이 없으신가요? 
+        <span class="signup-link" onclick="location.href='signup.html'">회원가입</span>
+    </p>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+        getAuth, 
+        signInWithEmailAndPassword, 
+        GoogleAuthProvider, 
+        signInWithPopup 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // 봉이의 파이어베이스 설정값 (이미 입력해뒀어!)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDj7sSt6RIAXkUnZ_TLbIhDZUVkgqhJOH0",
+        authDomain: "bong-account.firebaseapp.com",
+        projectId: "bong-account",
+        storageBucket: "bong-account.firebasestorage.app",
+        messagingSenderId: "98177629609",
+        appId: "1:98177629609:web:d922af5f8fb6c1465998b8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // 1. 일반 이메일 로그인 로직
+    document.getElementById('login-btn').addEventListener('click', () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('login-error-message');
+
+        errorDiv.innerText = ""; // 클릭할 때마다 메시지 초기화
+
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                if (user.emailVerified) {
+                    location.href = "main.html"; // 인증 완료 시 메인으로 이동
+                } else {
+                    errorDiv.innerText = "이메일 인증이 완료되지 않았습니다.";
+                    auth.signOut();
+                }
+            })
+            .catch((error) => {
+                console.error("Firebase Auth Error:", error.code);
+                errorDiv.innerText = "이메일 또는 비밀번호가 틀렸습니다.";
+            });
+    });
+
+    // 2. 구글 로그인 로직
+    document.getElementById('google-login-btn').addEventListener('click', () => {
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                console.log("구글 로그인 성공!");
+                location.href = "main.html"; // 로그인 성공 시 메인으로 이동
+            })
+            .catch((error) => {
+                console.error("Google Login Error:", error);
+                alert("구글 로그인 실패: " + error.message);
+            });
+    });
+</script>
+
+</body>
+</html>
